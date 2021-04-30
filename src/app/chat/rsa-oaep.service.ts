@@ -1,6 +1,5 @@
-import { Injectable } from '@angular/core';
-import {from} from 'rxjs';
-import {switchMap} from 'rxjs/operators';
+import {Injectable} from '@angular/core';
+import {User} from '../user/user';
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +26,7 @@ export class RsaOaepService {
     );
   }
 
-  public async decryptMessage(privateKey: any, cipherMessage: ArrayBuffer): Promise<void> {
+  public async decryptMessage(privateKey: any, cipherMessage: ArrayBuffer): Promise<string> {
     const decrypted = await window.crypto.subtle.decrypt(
       {
         name: 'RSA-OAEP'
@@ -35,9 +34,12 @@ export class RsaOaepService {
       privateKey,
       cipherMessage
     );
+    // todo kann falsch sein wenn nicht klappt dann anderer decoder oder falsche schreibweise
+    const enc = new TextDecoder('base-64');
+    return enc.decode(decrypted);
   }
 
-  public async generateKey(): Promise<void>{
+  public async generateKey(user: User): Promise<void>{
     const keyPairPromise = window.crypto.subtle.generateKey(
       {
         name: 'RSA-OAEP',
@@ -47,12 +49,9 @@ export class RsaOaepService {
       },
       true,
       ['encrypt', 'decrypt']
-    );
-    console.log(keyPairPromise);
-    from(keyPairPromise).pipe(
-      switchMap(p => from(crypto.subtle.exportKey('jwk', p.publicKey)))
-    ).subscribe(p => {
-      console.log(p);
+    ).then((keyPair) => {
+      user.privateKey = keyPair.privateKey;
+      user.publicKey = keyPair.publicKey;
     });
   }
 }

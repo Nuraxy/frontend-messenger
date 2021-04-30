@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {User} from '../user';
+import {User} from '../user/user';
 import {NgForm} from '@angular/forms';
 import {ChatMessage} from './chatMessage';
 import {ChatMessageDto} from './chatMessageDTo';
