@@ -3,7 +3,7 @@ import {User} from '../user';
 import {NgForm} from '@angular/forms';
 import {ChatMessage} from './chatMessage';
 import {ChatMessageDto} from './chatMessageDTo';
-import {WebSocketService} from '../websocket.service';
+import {WebSocketService} from './websocket.service';
 
 
 @Component({
