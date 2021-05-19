@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {ChatMessageDto} from './chatMessageDTo';
-import {ChatMessage} from './chatMessage';
+import {GreetingChatMessage} from './greetingChatMessage';
+import {User} from '../user/user';
 
 @Injectable({
   providedIn: 'root'
@@ -12,12 +13,12 @@ export class WebSocketService {
 
   constructor() { }
 
-  public openWebSocket(chatMessageGreeting: ChatMessage): void{
+  public onOpenWebSocket(greetingChatMessage: GreetingChatMessage): void{
     this.webSocket = new WebSocket('ws://localhost:8080/chat');
 
     this.webSocket.onopen = (event) => {
       console.log('Open: ', event);
-      this.webSocket?.send(JSON.stringify(chatMessageGreeting));
+      this.webSocket?.send(JSON.stringify(greetingChatMessage));
     };
 
     this.webSocket.onmessage = (event) => {

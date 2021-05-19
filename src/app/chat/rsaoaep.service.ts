@@ -1,14 +1,23 @@
 import {Injectable} from '@angular/core';
-import {User} from '../user/user';
-
+import {BehaviorSubject, Observable} from 'rxjs';
+import {Token} from '../token';
 @Injectable({
   providedIn: 'root'
 })
-export class RsaOaepService {
+export class RsaoaepService {
 
   private ciphertext!: ArrayBuffer;
+  currentTokenSubject: BehaviorSubject<Token>;
+  public currentToken: Observable<Token>;
 
-  constructor() {}
+  constructor() {
+    this.currentTokenSubject = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
+    this.currentToken = this.currentTokenSubject.asObservable();
+  }
+
+  public get currentTokenValue(): Token {
+    return this.currentTokenSubject.value;
+  }
 
   public getMessageEncoding(message: string): Uint8Array {
     const enc = new TextEncoder();
@@ -39,8 +48,8 @@ export class RsaOaepService {
     return enc.decode(decrypted);
   }
 
-  public async generateKey(user: User): Promise<void>{
-    const keyPairPromise = window.crypto.subtle.generateKey(
+  public async generateKey(currentToken: Token): Promise<void> {
+    window.crypto.subtle.generateKey(
       {
         name: 'RSA-OAEP',
         modulusLength: 4096,
@@ -50,8 +59,14 @@ export class RsaOaepService {
       true,
       ['encrypt', 'decrypt']
     ).then((keyPair) => {
-      user.privateKey = keyPair.privateKey;
-      user.publicKey = keyPair.publicKey;
+
+      window.crypto.subtle.exportKey('jwk', keyPair.publicKey)
+        .then(exported => localStorage.setItem('publicKey', JSON.stringify(exported)));
+
+      // currentToken.user.privateKey = keyPair.privateKey;
+      // currentToken.user.publicKey = keyPair.publicKey;
+      // localStorage.setItem('privateKey', JSON.stringify(keyPair.privateKey));
+      // localStorage.setItem('token', JSON.stringify(currentToken));
     });
   }
 }

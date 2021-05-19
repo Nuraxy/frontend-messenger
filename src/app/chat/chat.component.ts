@@ -1,10 +1,10 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {User} from '../user/user';
 import {NgForm} from '@angular/forms';
-import {ChatMessage} from './chatMessage';
+import {GreetingChatMessage} from './greetingChatMessage';
 import {ChatMessageDto} from './chatMessageDTo';
 import {WebSocketService} from './websocket.service';
-
+import {LoginService} from '../login/login.service';
 
 @Component({
   selector: 'app-chat',
@@ -12,16 +12,18 @@ import {WebSocketService} from './websocket.service';
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
-  friends: User[] = [{userId: 1, name: 'Niclas'}, {userId: 2, name: 'Marc'}];
+  friends: User[] = [{userId: 1, name: 'Test'}, {userId: 2, name: 'Test2'}];
   chatId!: number;
-  currentUser: User = {userId: 1, name: 'Niclas'};
+  currentUser = new User();
 
-  constructor( public webSocketService: WebSocketService) {
+  constructor(public webSocketService: WebSocketService, public loginService: LoginService) {
   }
 
   ngOnInit(): void {
-    const chatMessage = new ChatMessage(this.currentUser);
-    this.webSocketService.openWebSocket(chatMessage);
+    this.currentUser = this.loginService.currentTokenValue.user;
+    const greetingChatMessage = new GreetingChatMessage(this.currentUser);
+    this.webSocketService.onOpenWebSocket(greetingChatMessage);
+    console.log(localStorage.getItem('publicKey') as string);
   }
 
   getRightFriendById(chatId: number): string {

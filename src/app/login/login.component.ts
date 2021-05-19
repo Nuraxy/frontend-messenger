@@ -22,9 +22,7 @@ export class LoginComponent implements OnInit {
     this.form = this.formBuilder.group(
       {
         username: ['', Validators.required],
-        password: ['', Validators.required],
-        pKey: ['', Validators.required],
-        qKey: ['', Validators.required]
+        password: ['', Validators.required]
       }
     );
   }
@@ -44,9 +42,7 @@ export class LoginComponent implements OnInit {
   private subscribe(): void {
     this.loginService.login(
       this.formContent.username.value,
-      this.formContent.password.value,
-      this.formContent.pKey.value,
-      this.formContent.qKey.value
+      this.formContent.password.value
     ).pipe(first(),
       catchError(
         error => {
@@ -63,4 +59,5 @@ export class LoginComponent implements OnInit {
   navigate(): void {
     this.router.navigateByUrl(`/chat`);
   }
+
 }

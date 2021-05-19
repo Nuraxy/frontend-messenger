@@ -1,17 +1,15 @@
 import {User} from '../user/user';
 
-export class ChatMessage {
+export class GreetingChatMessage {
   name: string;
   to: string;
   message: string;
-  keyE: number;
-  keyN: number;
+  publicKey?: string | null;
 
   constructor(user: User) {
     this.name = user.name;
     this.to = 'Greeting';
     this.message = 'Empty Greeting Message';
-    this.keyE = 17;
-    this.keyN = 2773;
+    this.publicKey = localStorage.getItem('publicKey') as string;
   }
 }
