@@ -23,7 +23,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.currentUser = this.loginService.currentTokenValue.user;
     const greetingChatMessage = new GreetingChatMessage(this.currentUser);
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
-    console.log(localStorage.getItem('publicKey') as string);
   }
 
   getRightFriendById(chatId: number): string {

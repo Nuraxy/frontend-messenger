@@ -50,14 +50,15 @@ export class LoginComponent implements OnInit {
           return EMPTY;
         }
       ))
-      .subscribe(() => {
-        const userId = this.loginService.currentTokenValue.user.userId;
+      .subscribe((token) => {
         this.router.navigateByUrl(`/chat`);
+        // @ts-ignore
+        console.log('TEST 2 ' + token.user.publicKey);
       });
   }
 
-  navigate(): void {
-    this.router.navigateByUrl(`/chat`);
-  }
+  // navigate(): void {
+  //
+  // }
 
 }

@@ -10,6 +10,6 @@ export class GreetingChatMessage {
     this.name = user.name;
     this.to = 'Greeting';
     this.message = 'Empty Greeting Message';
-    this.publicKey = localStorage.getItem('publicKey') as string;
+    this.publicKey = user.publicKey;
   }
 }

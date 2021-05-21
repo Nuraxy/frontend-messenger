@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, forkJoin, from, Observable, of} from 'rxjs';
 import {Token} from '../token';
 import {HttpClient} from '@angular/common/http';
-import {map} from 'rxjs/operators';
+import {filter, map, mergeMap, tap} from 'rxjs/operators';
 import {RsaoaepService} from '../chat/rsaoaep.service';
 
 @Injectable({providedIn: 'root'})
@@ -19,21 +19,65 @@ export class LoginService {
     return this.currentTokenSubject.value;
   }
 
-  public login(nameOrEmail: string, password: string): Observable<Token | null> {
+  public login(nameOrEmail: string, password: string): Observable<Token> {
     return this.http.post<Token>(`http://localhost:8080/users/authenticate`,
       {nameOrEmail, password}, {observe: 'response'})
-      .pipe(map((response) => {
-          const token = response.body;
-          console.log(token);
-          localStorage.setItem('token', JSON.stringify(token));
-          if (token) {
-          this.currentTokenSubject.next(token);
-          if (token.user.publicKey == null){
-            this.rsaoaepService.generateKey(token);
+      .pipe(
+        map(response => response.body),
+        filter(token => token != null),
+        map(token => token as Token),
+        tap((token: Token) => this.currentTokenSubject.next(token)),
+        mergeMap((token: Token) => {
+          if (token.user.publicKey == null) {
+            return this.generateKeys(token);
+          } else {
+            return of(token);
           }
-        }
-          return token;
-        }
-      ));
+        }),
+        tap(token => localStorage.setItem('token', JSON.stringify(token)))
+      );
+  }
+
+  private generateKeys(token: Token): Observable<Token> {
+    return from(this.rsaoaepService.generateKey()).pipe(
+      mergeMap(keyPair => {
+        return from(crypto.subtle.exportKey('jwk', keyPair.publicKey)).pipe(
+          tap(exported => {
+            localStorage.setItem('publicKey', JSON.stringify(exported));
+            token.user.publicKey = JSON.stringify(exported);
+          }),
+          map(() => keyPair)
+        );
+      }),
+      mergeMap(keyPair => {
+        return from(crypto.subtle.exportKey('jwk', keyPair.privateKey)).pipe(
+          tap(exported => {
+            localStorage.setItem('privateKey', JSON.stringify(exported));
+            token.user.privateKey = JSON.stringify(exported);
+          }),
+          map(() => keyPair)
+        );
+      }),
+      map(() => token)
+    );
+  }
+
+  private generateKeys2(token: Token): Observable<Token> {
+    return from(this.rsaoaepService.generateKey()).pipe(
+      mergeMap(keyPair => {
+        return forkJoin([
+          from(crypto.subtle.exportKey('jwk', keyPair.publicKey)),
+          from(crypto.subtle.exportKey('jwk', keyPair.privateKey))
+        ]).pipe(
+          tap(([publicExported, privateExported]) => {
+            localStorage.setItem('publicKey', JSON.stringify(publicExported));
+            token.user.publicKey = JSON.stringify(publicExported);
+            localStorage.setItem('privateKey', JSON.stringify(privateExported));
+            token.user.privateKey = JSON.stringify(privateExported);
+          })
+        );
+      }),
+      map(() => token)
+    );
   }
 }

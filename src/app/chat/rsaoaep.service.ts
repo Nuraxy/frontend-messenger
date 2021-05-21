@@ -48,8 +48,8 @@ export class RsaoaepService {
     return enc.decode(decrypted);
   }
 
-  public async generateKey(currentToken: Token): Promise<void> {
-    window.crypto.subtle.generateKey(
+  public generateKey(/*currentToken: Token*/): Promise<CryptoKeyPair> {
+    return window.crypto.subtle.generateKey(
       {
         name: 'RSA-OAEP',
         modulusLength: 4096,
@@ -58,15 +58,16 @@ export class RsaoaepService {
       },
       true,
       ['encrypt', 'decrypt']
-    ).then((keyPair) => {
-
-      window.crypto.subtle.exportKey('jwk', keyPair.publicKey)
-        .then(exported => localStorage.setItem('publicKey', JSON.stringify(exported)));
-
+    );
+      // .then((keyPair) => {
+      // crypto.subtle.exportKey('jwk', keyPair.publicKey)
+      //   .then(exported => {
+      //     localStorage.setItem('publicKey', JSON.stringify(exported));
+      //     currentToken.user.publicKey = JSON.stringify(exported);
+      //   })
+      //   @ts-ignore
+        // .then(() => console.log('TEST -- ' + localStorage.getItem('publicKey').toString()));
       // currentToken.user.privateKey = keyPair.privateKey;
-      // currentToken.user.publicKey = keyPair.publicKey;
-      // localStorage.setItem('privateKey', JSON.stringify(keyPair.privateKey));
-      // localStorage.setItem('token', JSON.stringify(currentToken));
-    });
+    // });
   }
 }

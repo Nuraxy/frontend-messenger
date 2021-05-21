@@ -3,6 +3,6 @@ export class User {
   name!: string;
   password?: string;
   email?: string;
-  publicKey?: CryptoKey;
-  privateKey?: CryptoKey;
+  publicKey?: string;
+  privateKey?: string;
 }

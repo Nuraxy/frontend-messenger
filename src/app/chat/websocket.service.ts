@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import {ChatMessageDto} from './chatMessageDTo';
 import {GreetingChatMessage} from './greetingChatMessage';
-import {User} from '../user/user';
 
 @Injectable({
   providedIn: 'root'
