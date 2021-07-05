@@ -4,6 +4,7 @@ import {Observable} from 'rxjs';
 import {User} from './user';
 import {environment} from '../../environments/environment';
 import {LoginService} from '../login/login.service';
+import {Page} from '../page';
 
 @Injectable({providedIn: 'root'})
 export class UserService {
@@ -61,5 +62,29 @@ export class UserService {
 
   sendPasswordReset(email: any): Observable<any> {
     return this.http.post<any>(`${environment.apiUrl}users/forgotPassword`, {email});
+  }
+
+  getUserPageableAndSearch(
+    pageNumber: number,
+    pageSize: number,
+    pageSort: string,
+    search: string = ''): Observable<Page<User>> {
+
+    let params = new HttpParams();
+
+    if (pageNumber != null) {
+      params = params.append('page', String(pageNumber));
+    }
+    if (pageSize != null) {
+      params = params.append('size', String(pageSize));
+    }
+    if (pageSort != null) {
+      params = params.append('sort', String(pageSort));
+    }
+    if (search != null && search.length > 0){
+      params = params.append('search', search);
+    }
+
+    return this.http.get<Page<User>>(`${environment.apiUrl}/users/search-pageable-users`, {params});
   }
 }

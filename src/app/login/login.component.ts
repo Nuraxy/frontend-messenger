@@ -32,7 +32,7 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit(): void {
-    console.log(this.form.value);
+    // console.log(this.form.value);
     if (this.form.invalid) {
       return;
     }
@@ -46,14 +46,13 @@ export class LoginComponent implements OnInit {
     ).pipe(first(),
       catchError(
         error => {
-          console.log(error);
+          // console.log(error);
           return EMPTY;
         }
       ))
       .subscribe((token) => {
         this.router.navigateByUrl(`/chat`);
-        // @ts-ignore
-        console.log('TEST 2 ' + token.user.publicKey);
+        // console.log('TEST 2 ' + token.user.publicKey);
       });
   }
 

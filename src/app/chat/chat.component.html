@@ -1,6 +1,19 @@
 <div class="card mx-4 mt-4">
   <div class="card-header bg-light">
     WhatsWapp
+    <ng-select labelForId="pc"
+               [items]="users"
+               [formControl]="user"
+               [virtualScroll]="true"
+               [loading]="loading"
+               [clearable]="false"
+               [typeahead]="searchSubject$"
+               bindLabel="name"
+               placeholder="Placeholder"
+               appendTo="body"
+               (scroll)="onScroll($event)"
+               (scrollToEnd)="onScrollToEnd()">
+    </ng-select>
   </div>
   <div class="card-body">
     <div class="row">

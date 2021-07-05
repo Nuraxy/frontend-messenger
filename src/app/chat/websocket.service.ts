@@ -1,6 +1,10 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {ChatMessageDto} from './chatMessageDTo';
 import {GreetingChatMessage} from './greetingChatMessage';
+import {BehaviorSubject, from} from 'rxjs';
+import {RsaoaepService} from './rsaoaep.service';
+import {UserService} from '../user/user.service';
+import {Token} from '../token';
 
 @Injectable({
   providedIn: 'root'
@@ -9,35 +13,54 @@ export class WebSocketService {
 
   webSocket?: WebSocket;
   chatMessages: ChatMessageDto[] = [];
+  chatMessageDto!: ChatMessageDto;
+  token: BehaviorSubject<Token>;
+  interval: any;
 
-  constructor() { }
+  constructor(public rsaoaepService: RsaoaepService, public userService: UserService) {
+    this.token = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
+  }
 
-  public onOpenWebSocket(greetingChatMessage: GreetingChatMessage): void{
-    this.webSocket = new WebSocket('ws://localhost:8080/chat');
+  public onOpenWebSocket(greetingChatMessage: GreetingChatMessage): void {
+    this.webSocket = new WebSocket('ws://localhost:8079/chat');
 
     this.webSocket.onopen = (event) => {
-      console.log('Open: ', event);
+      // console.log('Open: ', event);
       this.webSocket?.send(JSON.stringify(greetingChatMessage));
     };
 
     this.webSocket.onmessage = (event) => {
-      const chatMessageDto = JSON.parse(event.data);
-      this.chatMessages.push(chatMessageDto);
+      const chatMessageDtoEncrypted = JSON.parse(event.data);
+      this.rsaoaepService.decryptMessage(chatMessageDtoEncrypted.message).subscribe((decryptedMessage) => {
+        this.chatMessageDto = chatMessageDtoEncrypted;
+        this.chatMessageDto.message = decryptedMessage;
+        this.chatMessages.push(this.chatMessageDto);
+      }, (error => {
+        console.error(error);
+      }));
     };
 
     this.webSocket.onclose = (event) => {
-      console.log('Close: ', event);
+      // console.log('Close: ', event);
     };
   }
 
   public sendMessage(chatMessageDto: ChatMessageDto): void {
     if (this.webSocket) {
-      this.webSocket.send(JSON.stringify(chatMessageDto));
+      this.userService.getUser(chatMessageDto.to).subscribe((user) => {
+        from(this.rsaoaepService.encryptMessage(chatMessageDto.message, user))
+          .subscribe((data) => {
+            chatMessageDto.message = data;
+            if (this.webSocket !== undefined) {
+              this.webSocket.send(JSON.stringify(chatMessageDto));
+            }
+          });
+      });
     }
   }
 
   public closeWebSocket(): void {
-    if (this.webSocket){
+    if (this.webSocket) {
       this.webSocket.close();
     }
   }

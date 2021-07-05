@@ -11,21 +11,20 @@ export class InterceptorService implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const currentToken = this.loginService.currentTokenValue;
     if (currentToken && currentToken.tokenValue) {
+      const userRole = this.loginService.currentTokenValue.user.userRole;
       request = request.clone(
-        {
-          setHeaders: {
+        {setHeaders: {
             Authentication: `${currentToken.tokenValue}`,
+            UserRole: `${userRole.roleName}`
           }
         });
     } else {
       const param = new URLSearchParams(document.location.search.substring(1));
       const key = param.get('key');
       request = request.clone(
-        {
-          setHeaders: {
+        {setHeaders: {
             Authentication: `${key}`
-          }
-        }
+          }}
       );
     }
     return next.handle(request);

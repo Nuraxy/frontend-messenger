@@ -9,6 +9,7 @@ import {LoginService} from './login/login.service';
 import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {InterceptorService} from './login/interceptor.service';
 import { ChatComponent } from './chat/chat.component';
+import {NgSelectModule} from '@ng-select/ng-select';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { ChatComponent } from './chat/chat.component';
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
-    HttpClientModule
+    HttpClientModule,
+    NgSelectModule
   ],
   providers: [
     LoginService,
