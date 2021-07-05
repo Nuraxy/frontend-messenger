@@ -35,9 +35,7 @@ export class WebSocketService {
         this.chatMessageDto = chatMessageDtoEncrypted;
         this.chatMessageDto.message = decryptedMessage;
         this.chatMessages.push(this.chatMessageDto);
-      }, (error => {
-        console.error(error);
-      }));
+      });
     };
 
     this.webSocket.onclose = (event) => {
@@ -47,15 +45,15 @@ export class WebSocketService {
 
   public sendMessage(chatMessageDto: ChatMessageDto): void {
     if (this.webSocket) {
-      this.userService.getUser(chatMessageDto.to).subscribe((user) => {
-        from(this.rsaoaepService.encryptMessage(chatMessageDto.message, user))
-          .subscribe((data) => {
-            chatMessageDto.message = data;
-            if (this.webSocket !== undefined) {
-              this.webSocket.send(JSON.stringify(chatMessageDto));
-            }
-          });
-      });
+      // todo find by name
+      // todo ist nur der vom sender noch kein empänger da !!
+      from(this.rsaoaepService.encryptMessage(chatMessageDto.message))
+        .subscribe((data) => {
+          chatMessageDto.message = data;
+          if (this.webSocket !== undefined) {
+            this.webSocket.send(JSON.stringify(chatMessageDto));
+          }
+        });
     }
   }
 

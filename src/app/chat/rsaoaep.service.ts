@@ -1,10 +1,9 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, from, Observable} from 'rxjs';
 import {Token} from '../token';
-import {map, tap} from 'rxjs/operators';
+import {map, mergeMap} from 'rxjs/operators';
 import {flatMap} from 'rxjs/internal/operators';
 import {Base64} from 'js-base64';
-import {User} from '../user/user';
 
 @Injectable({
   providedIn: 'root'
@@ -12,24 +11,25 @@ import {User} from '../user/user';
 export class RsaoaepService {
 
   currentTokenSubject: BehaviorSubject<Token>;
-  public currentTokenObservable: Observable<Token>;
-  public currentToken!: Token;
+  public currentToken: Observable<Token>;
+  public publicKeyString = 'missing';
   public privateKey: CryptoKey | undefined;
 
   constructor() {
     this.currentTokenSubject = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
-    this.currentTokenObservable = this.currentTokenSubject.asObservable();
-    this.currentTokenObservable.subscribe( (token) => {
-      this.currentToken = token;
-    });
+    this.currentToken = this.currentTokenSubject.asObservable();
   }
 
   public get currentTokenValue(): Token {
     return this.currentTokenSubject.value;
   }
 
-  public generateKeys(): Observable<string> {
-    return from(window.crypto.subtle.generateKey(
+  /*
+  Generate an encryption key pair, then set up event listeners
+  on the "Encrypt" and "Decrypt" buttons.
+  */
+  public generateKeys(): void {
+    from(window.crypto.subtle.generateKey(
       {
         name: 'RSA-OAEP',
         // Consider using a 4096-bit key for systems that require long-term security
@@ -40,23 +40,87 @@ export class RsaoaepService {
       true,
       ['encrypt', 'decrypt']
     )).pipe(
-      flatMap((keyPair) => {
+      mergeMap((keyPair) => {
         this.privateKey = keyPair.privateKey;
+        return from(this.exportCryptoKey(keyPair.publicKey)).pipe(
+          map((keyString: string) => keyString)
+        );
+      }),
+      mergeMap(() => {
+        return this.encryptMessage('Please kill me !!!').pipe(
+          map((testMessage: string) => testMessage)
+        );
+      }),
+      mergeMap((testMessage: string) => {
+        console.log('Verschlüsselt: ' + testMessage);
+        return this.decryptMessage(testMessage);
+      })
+    ).subscribe(text => {
+      console.log('Entschlüsselt: ' + text);
+    });
 
-        return this.exportCryptoKey(keyPair.publicKey);
+
+  }
+
+  /*
+  Export the given key and write it into the "exported-key" space.
+  */
+  exportCryptoKey(key: CryptoKey): Observable<string> {
+    return from(window.crypto.subtle.exportKey(
+      'spki',
+      key
+    )).pipe(
+      map((exported) => {
+        const exportedKeyBuffer = new Uint8Array(exported);
+        const numberArray = [...exportedKeyBuffer];
+        const exportedAsString = String.fromCharCode.apply(null, numberArray);
+        const exportedAsBase64 = window.btoa(exportedAsString);
+        const keyExport = `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`;
+        this.publicKeyString = keyExport;
+        localStorage.setItem('publicKey', keyExport);
+        return keyExport;
       })
     );
   }
 
-  public encryptMessage(message: string, userToSendTo: User): Observable<string> {
+  /*
+  Import a PEM encoded RSA private key, to use for RSA-PSS signing.
+  Takes a string containing the PEM encoded key, and returns a Promise
+  that will resolve to a CryptoKey representing the private key.
+  */
+  importPublicKey(key: string): Promise<CryptoKey> {
+    // fetch the part of the PEM string between header and footer
+    const pemHeader = '-----BEGIN PUBLIC KEY-----';
+    const pemFooter = '-----END PUBLIC KEY-----';
+    const pemContents = key.substring(pemHeader.length, key.length - pemFooter.length);
+    // base64 decode the string to get the binary data
+    const binaryDerString = window.atob(pemContents);
+    // convert from a binary string to an ArrayBuffer
+    const buf = new ArrayBuffer(binaryDerString.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = binaryDerString.length; i < strLen; i++) {
+      bufView[i] = binaryDerString.charCodeAt(i);
+    }
+    return window.crypto.subtle.importKey(
+      'spki',
+      bufView,
+      {
+        name: 'RSA-OAEP',
+        hash: 'SHA-256'
+      },
+      true,
+      ['encrypt']
+    );
+  }
+
+  /*
+  Get the encoded message, encrypt it and display a representation
+  of the ciphertext in the "Ciphertext" element.
+  */
+  public encryptMessage(message: string): Observable<string> {
     const enc = new TextEncoder();
     const encoded = enc.encode(message);
-    console.log('User for Import: ', this.currentToken);
-    let publicKey = 'missing';
-    if (userToSendTo.publicKey !== undefined){
-      publicKey = userToSendTo.publicKey;
-    }
-    return from(this.importPublicKey(publicKey)).pipe(
+    return from(this.importPublicKey(this.publicKeyString)).pipe(
       flatMap((importedKey) => {
         return from(
           window.crypto.subtle.encrypt(
@@ -78,9 +142,16 @@ export class RsaoaepService {
     );
   }
 
+  /*
+  Fetch the ciphertext and decrypt it.
+  */
   public decryptMessage(input: string): Observable<string> {
     const uint8Array = Base64.toUint8Array(input);
-    console.log('Decrypt uint8Array: ', uint8Array);
+    // const dec = new TextDecoder();
+    // let arrayBuffer: ArrayBuffer;
+    // arrayBuffer = this.messageToUint8Array(input);
+    // console.log(arrayBuffer);
+    // const forDecode = this.messageToUint8Array(arrayBuffer);
     if (this.privateKey) {
       return from(window.crypto.subtle.decrypt(
         {name: 'RSA-OAEP'},
@@ -96,45 +167,6 @@ export class RsaoaepService {
     } else {
       return Observable.throw(new Error('error1'));
     }
-  }
-
-  exportCryptoKey(key: CryptoKey): Observable<string> {
-    return from(window.crypto.subtle.exportKey(
-      'spki',
-      key
-    )).pipe(
-      map((exported) => {
-        const exportedKeyBuffer = new Uint8Array(exported);
-        const numberArray = [...exportedKeyBuffer];
-        const exportedAsString = String.fromCharCode.apply(null, numberArray);
-        const exportedAsBase64 = window.btoa(exportedAsString);
-        // return `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`;
-        return exportedAsBase64;
-      })
-    );
-  }
-
-  importPublicKey(key: string): Promise<CryptoKey> {
-    // const pemHeader = '-----BEGIN PUBLIC KEY-----\n';
-    // const pemFooter = '\n-----END PUBLIC KEY-----';
-    // const pemContents = key.substring(pemHeader.length, key.length - pemFooter.length);
-    // const binaryDerString = window.atob(pemContents);
-    const binaryDerString = window.atob(key);
-    const buf = new ArrayBuffer(binaryDerString.length);
-    const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = binaryDerString.length; i < strLen; i++) {
-      bufView[i] = binaryDerString.charCodeAt(i);
-    }
-    return window.crypto.subtle.importKey(
-      'spki',
-      bufView,
-      {
-        name: 'RSA-OAEP',
-        hash: 'SHA-256'
-      },
-      true,
-      ['encrypt']
-    );
   }
 
 }
