@@ -24,10 +24,6 @@ export class RsaoaepService {
     return this.currentTokenSubject.value;
   }
 
-  /*
-  Generate an encryption key pair, then set up event listeners
-  on the "Encrypt" and "Decrypt" buttons.
-  */
   public generateKeys(): void {
     from(window.crypto.subtle.generateKey(
       {
@@ -62,9 +58,6 @@ export class RsaoaepService {
 
   }
 
-  /*
-  Export the given key and write it into the "exported-key" space.
-  */
   exportCryptoKey(key: CryptoKey): Observable<string> {
     return from(window.crypto.subtle.exportKey(
       'spki',
@@ -83,11 +76,6 @@ export class RsaoaepService {
     );
   }
 
-  /*
-  Import a PEM encoded RSA private key, to use for RSA-PSS signing.
-  Takes a string containing the PEM encoded key, and returns a Promise
-  that will resolve to a CryptoKey representing the private key.
-  */
   importPublicKey(key: string): Promise<CryptoKey> {
     // fetch the part of the PEM string between header and footer
     const pemHeader = '-----BEGIN PUBLIC KEY-----';
@@ -113,10 +101,6 @@ export class RsaoaepService {
     );
   }
 
-  /*
-  Get the encoded message, encrypt it and display a representation
-  of the ciphertext in the "Ciphertext" element.
-  */
   public encryptMessage(message: string): Observable<string> {
     const enc = new TextEncoder();
     const encoded = enc.encode(message);
@@ -142,9 +126,6 @@ export class RsaoaepService {
     );
   }
 
-  /*
-  Fetch the ciphertext and decrypt it.
-  */
   public decryptMessage(input: string): Observable<string> {
     const uint8Array = Base64.toUint8Array(input);
     // const dec = new TextDecoder();
