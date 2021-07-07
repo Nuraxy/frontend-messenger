@@ -13,7 +13,7 @@ export class GreetingChatMessage {
     if (user.publicKey != null) {
       this.message = user.publicKey;
     }else {
-      this.message = 'Missing PublicKey ';
+      this.message = 'Missing PublicKey';
     }
   }
 

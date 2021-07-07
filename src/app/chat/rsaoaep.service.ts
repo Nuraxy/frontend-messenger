@@ -24,8 +24,8 @@ export class RsaoaepService {
     return this.currentTokenSubject.value;
   }
 
-  public generateKeys(): void {
-    from(window.crypto.subtle.generateKey(
+  public generateKeys(): Observable<string> {
+    return from(window.crypto.subtle.generateKey(
       {
         name: 'RSA-OAEP',
         // Consider using a 4096-bit key for systems that require long-term security
@@ -42,20 +42,19 @@ export class RsaoaepService {
           map((keyString: string) => keyString)
         );
       }),
-      mergeMap(() => {
-        return this.encryptMessage('Please kill me !!!').pipe(
-          map((testMessage: string) => testMessage)
+      mergeMap((keyString: string) => {
+        this.encryptMessage('Please kill me !!!', this.publicKeyString).pipe(
+          map((testMessage: string) => {
+            console.log('Verschlüsselt: ' + testMessage);
+            from(this.decryptMessage(testMessage)).subscribe(text => {
+              console.log('Entschlüsselt: ' + text);
+            });
+          })
         );
-      }),
-      mergeMap((testMessage: string) => {
-        console.log('Verschlüsselt: ' + testMessage);
-        return this.decryptMessage(testMessage);
+        console.log('Hallo niclas2');
+        return keyString;
       })
-    ).subscribe(text => {
-      console.log('Entschlüsselt: ' + text);
-    });
-
-
+    );
   }
 
   exportCryptoKey(key: CryptoKey): Observable<string> {
@@ -70,7 +69,6 @@ export class RsaoaepService {
         const exportedAsBase64 = window.btoa(exportedAsString);
         const keyExport = `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`;
         this.publicKeyString = keyExport;
-        localStorage.setItem('publicKey', keyExport);
         return keyExport;
       })
     );
@@ -101,29 +99,33 @@ export class RsaoaepService {
     );
   }
 
-  public encryptMessage(message: string): Observable<string> {
+  public encryptMessage(message: string, receiverUserPublicKey: string): Observable<string> {
     const enc = new TextEncoder();
     const encoded = enc.encode(message);
-    return from(this.importPublicKey(this.publicKeyString)).pipe(
-      flatMap((importedKey) => {
-        return from(
-          window.crypto.subtle.encrypt(
-            {name: 'RSA-OAEP'},
-            importedKey,
-            encoded
-          )
-        ).pipe(
-          map((encrypted) => {
-            const uint8Array = new Uint8Array(encrypted);
-            const base64 = Base64.fromUint8Array(uint8Array);
-            console.log('encrypted', encrypted);
-            console.log('uint8Array:', uint8Array);
-            console.log('base64: ' + base64);
-            return base64;
-          })
-        );
-      }),
-    );
+    if (receiverUserPublicKey !== undefined) {
+      return from(this.importPublicKey(receiverUserPublicKey)).pipe(
+        flatMap((importedKey) => {
+          return from(
+            window.crypto.subtle.encrypt(
+              {name: 'RSA-OAEP'},
+              importedKey,
+              encoded
+            )
+          ).pipe(
+            map((encrypted) => {
+              const uint8Array = new Uint8Array(encrypted);
+              const base64 = Base64.fromUint8Array(uint8Array);
+              console.log('encrypted', encrypted);
+              console.log('uint8Array:', uint8Array);
+              console.log('base64: ' + base64);
+              return base64;
+            })
+          );
+        }),
+      );
+    } else {
+      return Observable.throw(new Error('error missing publicKey'));
+    }
   }
 
   public decryptMessage(input: string): Observable<string> {

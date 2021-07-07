@@ -45,15 +45,18 @@ export class WebSocketService {
 
   public sendMessage(chatMessageDto: ChatMessageDto): void {
     if (this.webSocket) {
-      // todo find by name
-      // todo ist nur der vom sender noch kein empänger da !!
-      from(this.rsaoaepService.encryptMessage(chatMessageDto.message))
-        .subscribe((data) => {
-          chatMessageDto.message = data;
-          if (this.webSocket !== undefined) {
-            this.webSocket.send(JSON.stringify(chatMessageDto));
+      this.userService.getUser(1).subscribe((receiverUser) => {
+          if (receiverUser.publicKey !== undefined) {
+            from(this.rsaoaepService.encryptMessage(chatMessageDto.message, receiverUser.publicKey))
+              .subscribe((data) => {
+                chatMessageDto.message = data;
+                if (this.webSocket !== undefined) {
+                  this.webSocket.send(JSON.stringify(chatMessageDto));
+                }
+              });
           }
-        });
+        }
+      );
     }
   }
 

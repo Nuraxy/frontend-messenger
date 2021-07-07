@@ -27,14 +27,23 @@ export class LoginService {
         filter(token => token != null),
         map(token => token as Token),
         tap((token: Token) => this.currentTokenSubject.next(token)),
-        tap( (token: Token) => {
-          if (token.user.publicKey == null) {
-            return this.rsaoaepService.generateKeys();
+        tap((token: Token) => {
+          console.log('Hallo niclas');
+          if (token.user.publicKey == null || token.user.publicKey != null) {
+            this.rsaoaepService.generateKeys().subscribe( (publicKeyString: string) => {
+              token.user.publicKey = publicKeyString;
+              console.log('Hä', publicKeyString);
+            });
+            localStorage.setItem('token', JSON.stringify(token));
+            console.log('WO IST MEIN PRIVATE KEY ??? ', JSON.parse(localStorage.getItem('token') as string));
+            return of(token);
           } else {
             return of(token);
           }
-        }),
-        tap(token => localStorage.setItem('token', JSON.stringify(token)))
+        })
+        // tap(token => {
+        //   localStorage.setItem('token', JSON.stringify(token));
+        // })
       );
   }
 
