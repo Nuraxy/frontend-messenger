@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, from, Observable} from 'rxjs';
 import {Token} from '../token';
-import {map, mergeMap} from 'rxjs/operators';
+import {map, mergeMap, tap} from 'rxjs/operators';
 import {flatMap} from 'rxjs/internal/operators';
 import {Base64} from 'js-base64';
 
@@ -38,22 +38,8 @@ export class RsaoaepService {
     )).pipe(
       mergeMap((keyPair) => {
         this.privateKey = keyPair.privateKey;
-        return from(this.exportCryptoKey(keyPair.publicKey)).pipe(
-          map((keyString: string) => keyString)
-        );
+        return this.exportCryptoKey(keyPair.publicKey);
       }),
-      mergeMap((keyString: string) => {
-        this.encryptMessage('Please kill me !!!', this.publicKeyString).pipe(
-          map((testMessage: string) => {
-            console.log('Verschlüsselt: ' + testMessage);
-            from(this.decryptMessage(testMessage)).subscribe(text => {
-              console.log('Entschlüsselt: ' + text);
-            });
-          })
-        );
-        console.log('Hallo niclas2');
-        return keyString;
-      })
     );
   }
 

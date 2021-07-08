@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {Token} from '../token';
 import {HttpClient} from '@angular/common/http';
-import {filter, map, tap} from 'rxjs/operators';
+import {filter, map, mergeMap, tap} from 'rxjs/operators';
 import {RsaoaepService} from '../chat/rsaoaep.service';
 
 @Injectable({providedIn: 'root'})
@@ -27,23 +27,19 @@ export class LoginService {
         filter(token => token != null),
         map(token => token as Token),
         tap((token: Token) => this.currentTokenSubject.next(token)),
-        tap((token: Token) => {
-          console.log('Hallo niclas');
+        mergeMap((token: Token) => {
           if (token.user.publicKey == null || token.user.publicKey != null) {
-            this.rsaoaepService.generateKeys().subscribe( (publicKeyString: string) => {
-              token.user.publicKey = publicKeyString;
-              console.log('Hä', publicKeyString);
-            });
-            localStorage.setItem('token', JSON.stringify(token));
-            console.log('WO IST MEIN PRIVATE KEY ??? ', JSON.parse(localStorage.getItem('token') as string));
-            return of(token);
+            return this.rsaoaepService.generateKeys().pipe(
+              map((publicKeyString: string) => {
+                token.user.publicKey = publicKeyString;
+                return token;
+              }),
+              tap((t: Token) => localStorage.setItem('token', JSON.stringify(t)))
+            );
           } else {
             return of(token);
           }
         })
-        // tap(token => {
-        //   localStorage.setItem('token', JSON.stringify(token));
-        // })
       );
   }
 

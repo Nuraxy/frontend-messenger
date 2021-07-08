@@ -8,6 +8,7 @@ import {LoginService} from '../login/login.service';
 import {Subject} from 'rxjs';
 import {Page} from '../page';
 import {UserService} from '../user/user.service';
+import {Token} from '../token';
 
 @Component({
   selector: 'app-chat',
@@ -36,8 +37,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const currentToken = JSON.parse(localStorage.getItem('token') as string);
-    console.log('currentUserXOXO', currentToken.user);
+    const currentToken: Token = JSON.parse(localStorage.getItem('token') as string);
+    console.log('currentUser MISSING KEY', currentToken.user);
     const greetingChatMessage = new GreetingChatMessage(currentToken.user);
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
   }
