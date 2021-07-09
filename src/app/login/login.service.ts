@@ -43,47 +43,4 @@ export class LoginService {
       );
   }
 
-  // private generateKeys(token: Token): Observable<Token> {
-  //   return from(this.rsaoaepService.generateKey()).pipe(
-  //     mergeMap(keyPair => {
-  //       return from(crypto.subtle.exportKey('jwk', keyPair.publicKey)).pipe(
-  //         tap(exported => {
-  //           // localStorage.setItem('publicKey', JSON.stringify(exported));
-  //           token.user.publicKey = JSON.stringify(exported);
-  //         }),
-  //         map(() => keyPair)
-  //       );
-  //     }),
-  //     mergeMap(keyPair => {
-  //       return from(crypto.subtle.exportKey('jwk', keyPair.privateKey)).pipe(
-  //         tap(exported => {
-  //           // localStorage.setItem('privateKey', JSON.stringify(exported));
-  //           token.user.privateKey = JSON.stringify(exported);
-  //         }),
-  //         map(() => keyPair)
-  //       );
-  //     }),
-  //     map(() => token)
-  //   );
-  // }
-
-  // private generateKeys2(token: Token): Observable<Token> {
-  //   return from(this.rsaoaepService.generateKey()).pipe(
-  //     mergeMap(keyPair => {
-  //       return forkJoin([
-  //         from(crypto.subtle.exportKey('jwk', keyPair.publicKey)),
-  //         from(crypto.subtle.exportKey('jwk', keyPair.privateKey))
-  //       ]).pipe(
-  //         tap(([publicExported, privateExported]) => {
-  //           localStorage.setItem('publicKey', JSON.stringify(publicExported));
-  //           token.user.publicKey = JSON.stringify(publicExported);
-  //           localStorage.setItem('privateKey', JSON.stringify(privateExported));
-  //           token.user.privateKey = JSON.stringify(privateExported);
-  //         })
-  //       );
-  //     }),
-  //     map(() => token)
-  //   );
-  // }
-
 }

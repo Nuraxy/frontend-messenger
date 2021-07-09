@@ -17,7 +17,6 @@ export class LoginGuard implements CanActivate {
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
     const currentToken = this.loginService.currentTokenValue;
     if (currentToken) {
-      // console.log(currentToken);
       return true;
     }
     this.router.navigateByUrl('/login');

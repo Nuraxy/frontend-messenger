@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, from, Observable} from 'rxjs';
 import {Token} from '../token';
-import {map, mergeMap, tap} from 'rxjs/operators';
+import {map, mergeMap} from 'rxjs/operators';
 import {flatMap} from 'rxjs/internal/operators';
 import {Base64} from 'js-base64';
 
@@ -101,9 +101,6 @@ export class RsaoaepService {
             map((encrypted) => {
               const uint8Array = new Uint8Array(encrypted);
               const base64 = Base64.fromUint8Array(uint8Array);
-              console.log('encrypted', encrypted);
-              console.log('uint8Array:', uint8Array);
-              console.log('base64: ' + base64);
               return base64;
             })
           );
@@ -116,11 +113,6 @@ export class RsaoaepService {
 
   public decryptMessage(input: string): Observable<string> {
     const uint8Array = Base64.toUint8Array(input);
-    // const dec = new TextDecoder();
-    // let arrayBuffer: ArrayBuffer;
-    // arrayBuffer = this.messageToUint8Array(input);
-    // console.log(arrayBuffer);
-    // const forDecode = this.messageToUint8Array(arrayBuffer);
     if (this.privateKey) {
       return from(window.crypto.subtle.decrypt(
         {name: 'RSA-OAEP'},
@@ -129,7 +121,6 @@ export class RsaoaepService {
       )).pipe(
         map((decrypted) => {
           const dec = new TextDecoder();
-          console.log('Decrypted richtig: ' + dec.decode(decrypted));
           return dec.decode(decrypted);
         })
       );

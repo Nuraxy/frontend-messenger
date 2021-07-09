@@ -1,7 +1,5 @@
 import {Component, OnInit} from '@angular/core';
 import {AbstractControl, FormBuilder, FormGroup, Validators} from '@angular/forms';
-import {catchError, first} from 'rxjs/operators';
-import {EMPTY} from 'rxjs';
 import {Router} from '@angular/router';
 import {LoginService} from './login.service';
 

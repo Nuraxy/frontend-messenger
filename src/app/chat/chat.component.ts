@@ -16,7 +16,8 @@ import {Token} from '../token';
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
-  friends: User[] = [{userId: 1, name: 'Test', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}}, {userId: 2, name: 'Test2', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}}];
+  friends: User[] = [{userId: 1, name: 'Test', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}},
+    {userId: 2, name: 'Test2', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}}];
   chatId!: number;
 
   users: User[] = [];
@@ -38,7 +39,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const currentToken: Token = JSON.parse(localStorage.getItem('token') as string);
-    console.log('currentUser MISSING KEY', currentToken.user);
     const greetingChatMessage = new GreetingChatMessage(currentToken.user);
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
   }

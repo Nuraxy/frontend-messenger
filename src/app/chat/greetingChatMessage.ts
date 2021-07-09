@@ -1,19 +1,21 @@
 import {User} from '../user/user';
 
 export class GreetingChatMessage {
-  name: string;
-  to: number;
   messageType: string;
-  message: string;
+  sender: number;
+  messageToSender: string;
+  receiver: number;
+  messageToReceiver: string;
 
   constructor(user: User) {
-    this.name = user.name;
-    this.to = 1;
     this.messageType = 'Greeting';
+    this.sender = user.userId;
+    this.messageToSender = '';
+    this.receiver = 1;
     if (user.publicKey != null) {
-      this.message = user.publicKey;
+      this.messageToReceiver = user.publicKey;
     }else {
-      this.message = 'Missing PublicKey';
+      this.messageToReceiver = 'Missing PublicKey';
     }
   }
 
