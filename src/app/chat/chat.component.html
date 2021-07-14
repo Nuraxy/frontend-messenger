@@ -44,7 +44,7 @@
             <ul class="list-group list-group-flush">
               <li class="list-group-item" *ngFor="let chatMessage of webSocketService.chatMessages">
                 <strong>{{chatMessage.sender}}: </strong>
-                <span>{{chatMessage.messageToReceiver}}</span>
+                <span>{{chatMessage.message}}</span>
               </li>
             </ul>
           </div>

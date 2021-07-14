@@ -2,7 +2,7 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {User} from '../user/user';
 import {FormControl, NgForm, Validators} from '@angular/forms';
 import {GreetingChatMessage} from './greetingChatMessage';
-import {ChatMessageDto} from './chatMessageDTo';
+import {ChatMessageOutgoing} from './chatMessageOutgoing';
 import {WebSocketService} from './websocket.service';
 import {LoginService} from '../login/login.service';
 import {Subject} from 'rxjs';
@@ -54,12 +54,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   sendMessage(sendForm: NgForm): void {
-    const chatMessageDto = new ChatMessageDto(
-      this.loginService.currentTokenValue.user,
-      this.getRightFriendById(this.chatId),
-      sendForm.value.message);
-
-    this.webSocketService.sendMessage(chatMessageDto);
+    this.webSocketService.sendMessage(this.getRightFriendById(this.chatId), sendForm.value.message);
     sendForm.controls.message.reset();
   }
 
