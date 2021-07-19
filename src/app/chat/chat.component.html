@@ -42,7 +42,9 @@
 
           <div class="card-body w-100">
             <ul class="list-group list-group-flush">
-              <li class="list-group-item" *ngFor="let chatMessage of webSocketService.chatMessages">
+              <li class="list-group-item"
+                  [ngClass]="{'textRight': chatMessage.receiver == chatMessage.sender}"
+                  *ngFor="let chatMessage of webSocketService.chatMessages">
                 <strong>{{chatMessage.sender}}: </strong>
                 <span>{{chatMessage.message}}</span>
               </li>

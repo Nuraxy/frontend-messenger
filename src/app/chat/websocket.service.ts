@@ -7,6 +7,7 @@ import {UserService} from '../user/user.service';
 import {Token} from '../token';
 import {map, mergeAll, mergeMap, tap} from 'rxjs/operators';
 import {User} from '../user/user';
+import {conditionallyCreateMapObjectLiteral} from '@angular/compiler/src/render3/view/util';
 
 @Injectable({
   providedIn: 'root'
@@ -63,7 +64,14 @@ export class WebSocketService {
           const chatId = this.createChatId(receiver);
           return forkJoin(
             [this.createEncryptedMessage(plainText, this.token.value.user, this.token.value.user, chatId),
-            this.createEncryptedMessage(plainText, this.token.value.user, receiver, chatId)]
+              this.createEncryptedMessage(plainText, this.token.value.user, receiver, chatId)]
+          ).pipe(
+            map((chatMessagesToSend) => {
+              if (chatMessagesToSend[1].sender === chatMessagesToSend[1].receiver) {
+                return chatMessagesToSend.slice(0, 1);
+              }
+              return chatMessagesToSend;
+            })
           );
         }),
         mergeAll(),

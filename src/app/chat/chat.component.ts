@@ -5,7 +5,7 @@ import {GreetingChatMessage} from './greetingChatMessage';
 import {ChatMessageOutgoing} from './chatMessageOutgoing';
 import {WebSocketService} from './websocket.service';
 import {LoginService} from '../login/login.service';
-import {Subject} from 'rxjs';
+import {BehaviorSubject, Subject} from 'rxjs';
 import {Page} from '../page';
 import {UserService} from '../user/user.service';
 import {Token} from '../token';
@@ -22,6 +22,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   users: User[] = [];
   user = new FormControl(undefined, [Validators.required]);
+  currentToken!: Token;
   searchSubject$: Subject<string> = new Subject<string>();
   loading!: false;
   pageSize = 8;
@@ -38,8 +39,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const currentToken: Token = JSON.parse(localStorage.getItem('token') as string);
-    const greetingChatMessage = new GreetingChatMessage(currentToken.user);
+    this.currentToken = JSON.parse(localStorage.getItem('token') as string);
+    const greetingChatMessage = new GreetingChatMessage(this.currentToken.user);
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
   }
 
