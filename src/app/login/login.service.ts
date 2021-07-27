@@ -1,16 +1,17 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, Observable, of} from 'rxjs';
+import {BehaviorSubject, from, Observable, of} from 'rxjs';
 import {Token} from '../token';
 import {HttpClient} from '@angular/common/http';
 import {filter, map, mergeMap, tap} from 'rxjs/operators';
-import {RsaoaepService} from '../chat/rsaoaep.service';
+import {RsaoaepService} from '../messenger/rsaoaep.service';
+import {IndexedDBService} from '../messenger/indexed-db.service';
 
 @Injectable({providedIn: 'root'})
 export class LoginService {
   currentTokenSubject: BehaviorSubject<Token>;
   public currentToken: Observable<Token>;
 
-  constructor(private http: HttpClient, private rsaoaepService: RsaoaepService) {
+  constructor(private http: HttpClient, private rsaoaepService: RsaoaepService, private indexedDBService: IndexedDBService) {
     this.currentTokenSubject = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
     this.currentToken = this.currentTokenSubject.asObservable();
   }
@@ -23,6 +24,11 @@ export class LoginService {
     return this.http.post<Token>(`http://localhost:8079/users/authenticate`,
       {nameOrEmail, password}, {observe: 'response'})
       .pipe(
+        mergeMap((response) => {
+          return from(this.indexedDBService.connectToDb()).pipe(
+            map(() => response)
+          );
+        }),
         map(response => response.body),
         filter(token => token != null),
         map(token => token as Token),

@@ -1,0 +1,44 @@
+<div class="card mx-4 mt-4">
+  <div class="card-header bg-light">
+    WhatsWapp
+    <ng-select labelForId="pc"
+               [items]="users"
+               [formControl]="user"
+               [virtualScroll]="true"
+               [loading]="loading"
+               [clearable]="false"
+               [typeahead]="searchSubject$"
+               bindLabel="name"
+               placeholder="Placeholder"
+               appendTo="body"
+               (scroll)="onScroll($event)"
+               (scrollToEnd)="onScrollToEnd()">
+    </ng-select>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-2 vh-75">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th scope="col">FREUNDE</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let friend of friends">
+            <td class="cursor2Pointer" (click)="getChatId(friend.userId)">
+              {{friend.name}}
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-10 vh-75">
+        <app-chat id="pc"
+                  *ngIf="chatId2 != null"
+                  [chatId]="chatId2">
+        </app-chat>
+      </div>
+    </div>
+  </div>
+</div>

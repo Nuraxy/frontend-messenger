@@ -41,8 +41,8 @@ export class LoginComponent implements OnInit {
       this.formContent.username.value,
       this.formContent.password.value
     ).subscribe((token) => {
-        this.router.navigateByUrl(`/chat`);
-      });
+      this.router.navigateByUrl(`/chat`);
+    });
   }
 
 }

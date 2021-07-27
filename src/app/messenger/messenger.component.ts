@@ -2,23 +2,24 @@ import {Component, OnDestroy, OnInit} from '@angular/core';
 import {User} from '../user/user';
 import {FormControl, NgForm, Validators} from '@angular/forms';
 import {GreetingChatMessage} from './greetingChatMessage';
-import {ChatMessageOutgoing} from './chatMessageOutgoing';
 import {WebSocketService} from './websocket.service';
-import {LoginService} from '../login/login.service';
-import {BehaviorSubject, Subject} from 'rxjs';
+import {Subject} from 'rxjs';
 import {Page} from '../page';
 import {UserService} from '../user/user.service';
 import {Token} from '../token';
+import {Router} from '@angular/router';
+import {FriendsService} from '../user/friend.service';
+import {flatMap} from 'rxjs/internal/operators';
 
 @Component({
-  selector: 'app-chat',
-  templateUrl: './chat.component.html',
-  styleUrls: ['./chat.component.scss']
+  selector: 'app-messenger',
+  templateUrl: './messenger.component.html',
+  styleUrls: ['./messenger.component.scss']
 })
-export class ChatComponent implements OnInit, OnDestroy {
-  friends: User[] = [{userId: 1, name: 'Test', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}},
-    {userId: 2, name: 'Test2', confirmed: true, userRole: {roleId: 1, roleName: 'Admin'}}];
+export class MessengerComponent implements OnInit, OnDestroy {
+  friends: User[] = [];
   chatId!: number;
+  chatId2!: string;
 
   users: User[] = [];
   user = new FormControl(undefined, [Validators.required]);
@@ -34,28 +35,29 @@ export class ChatComponent implements OnInit, OnDestroy {
   private pageTotalElements!: number;
 
   constructor(public webSocketService: WebSocketService,
-              public loginService: LoginService,
-              private userService: UserService) {
+              private userService: UserService,
+              private friendService: FriendsService,
+              private router: Router) {
   }
 
   ngOnInit(): void {
     this.currentToken = JSON.parse(localStorage.getItem('token') as string);
     const greetingChatMessage = new GreetingChatMessage(this.currentToken.user);
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
+    this.friendService.getUserFriends(this.currentToken.user.userId).subscribe((friends) => this.friends = friends);
   }
 
-  getRightFriendById(chatId: number): number {
-    for (const friend of this.friends) {
-      if (chatId === friend.userId) {
-        return friend.userId;
-      }
+  getChatId(friendId: number): number {
+      this.userService.getUser(friendId).subscribe((user) => {
+          this.chatId2 = this.webSocketService.createChatId(user);
+        }
+      );
+      // todo return for marc
+      return 1;
     }
-    // todo return for marc
-    return 1;
-  }
 
   sendMessage(sendForm: NgForm): void {
-    this.webSocketService.sendMessage(this.getRightFriendById(this.chatId), sendForm.value.message);
+    this.webSocketService.sendMessage(this.getChatId(this.chatId), sendForm.value.message);
     sendForm.controls.message.reset();
   }
 
@@ -91,4 +93,5 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.hasLoadAllUsers = page.last;
     });
   }
+
 }

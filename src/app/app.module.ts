@@ -8,13 +8,15 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {LoginService} from './login/login.service';
 import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {InterceptorService} from './login/interceptor.service';
-import { ChatComponent } from './chat/chat.component';
+import { MessengerComponent } from './messenger/messenger.component';
 import {NgSelectModule} from '@ng-select/ng-select';
+import { ChatComponent } from './messenger/chat/chat.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
+    MessengerComponent,
     ChatComponent
   ],
   imports: [

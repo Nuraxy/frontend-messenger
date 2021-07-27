@@ -1,13 +1,12 @@
 import {Injectable} from '@angular/core';
 import {ChatMessageOutgoing} from './chatMessageOutgoing';
 import {GreetingChatMessage} from './greetingChatMessage';
-import {BehaviorSubject, forkJoin, Observable, zip} from 'rxjs';
+import {BehaviorSubject, forkJoin, Observable} from 'rxjs';
 import {RsaoaepService} from './rsaoaep.service';
 import {UserService} from '../user/user.service';
 import {Token} from '../token';
-import {map, mergeAll, mergeMap, tap} from 'rxjs/operators';
+import {map, mergeAll, mergeMap} from 'rxjs/operators';
 import {User} from '../user/user';
-import {conditionallyCreateMapObjectLiteral} from '@angular/compiler/src/render3/view/util';
 
 @Injectable({
   providedIn: 'root'
@@ -84,7 +83,7 @@ export class WebSocketService {
     }
   }
 
-  private createChatId(receiver: User): string {
+  public createChatId(receiver: User): string {
     if (receiver.userId < this.token.value.user.userId) {
       return receiver.userId + '-' + this.token.value.user.userId;
     } else {

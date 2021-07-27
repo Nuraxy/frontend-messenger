@@ -1,9 +1,10 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, from, Observable} from 'rxjs';
+import {BehaviorSubject, forkJoin, from, Observable, throwError} from 'rxjs';
 import {Token} from '../token';
 import {map, mergeMap} from 'rxjs/operators';
 import {flatMap} from 'rxjs/internal/operators';
 import {Base64} from 'js-base64';
+import {IndexedDBService} from './indexed-db.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class RsaoaepService {
   public publicKeyString = 'missing';
   public privateKey: CryptoKey | undefined;
 
-  constructor() {
+  constructor(public indexedDBService: IndexedDBService) {
     this.currentTokenSubject = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
     this.currentToken = this.currentTokenSubject.asObservable();
   }
@@ -36,6 +37,14 @@ export class RsaoaepService {
       true,
       ['encrypt', 'decrypt']
     )).pipe(
+      mergeMap((keyPair) => {
+        return forkJoin([
+          this.indexedDBService.addKeyToDb(keyPair.publicKey, 'public'),
+          this.indexedDBService.addKeyToDb(keyPair.privateKey, 'private'),
+        ]).pipe(
+          map(() => keyPair)
+        );
+      }),
       mergeMap((keyPair) => {
         this.privateKey = keyPair.privateKey;
         return this.exportCryptoKey(keyPair.publicKey);
@@ -100,33 +109,33 @@ export class RsaoaepService {
           ).pipe(
             map((encrypted) => {
               const uint8Array = new Uint8Array(encrypted);
-              const base64 = Base64.fromUint8Array(uint8Array);
-              return base64;
+              return Base64.fromUint8Array(uint8Array);
             })
           );
         }),
       );
     } else {
-      return Observable.throw(new Error('error missing publicKey'));
+      return throwError(new Error('error missing publicKey'));
     }
   }
 
   public decryptMessage(input: string): Observable<string> {
     const uint8Array = Base64.toUint8Array(input);
-    if (this.privateKey) {
-      return from(window.crypto.subtle.decrypt(
-        {name: 'RSA-OAEP'},
-        this.privateKey,
-        uint8Array
-      )).pipe(
-        map((decrypted) => {
-          const dec = new TextDecoder();
-          return dec.decode(decrypted);
+    return this.indexedDBService.getFromDb('key-pair-store', 'private')
+      .pipe(
+        flatMap((key) => {
+          return from(window.crypto.subtle.decrypt(
+            {name: 'RSA-OAEP'},
+            key,
+            uint8Array
+          )).pipe(
+            map((decryptedBuffer) => {
+              const dec = new TextDecoder();
+              return dec.decode(decryptedBuffer);
+            })
+          );
         })
       );
-    } else {
-      return Observable.throw(new Error('error1'));
-    }
   }
 
 }
