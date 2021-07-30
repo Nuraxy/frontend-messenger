@@ -1,0 +1,29 @@
+<div class="card h-100">
+  <div class="card-header w-100">
+    {{chatId}}
+  </div>
+  <div class="card-body w-100">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item"
+          [ngClass]="{'textRight': chatMessage.receiver == chatMessage.sender}"
+          *ngFor="let chatMessage of webSocketService.chatMessages">
+        <div [ngClass]="{'textBoxRight float-right': chatMessage.receiver == chatMessage.sender}">
+        <strong>{{chatMessage.sender}}: </strong>
+        <span>{{chatMessage.message}}</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="card-footer">
+    <form (ngSubmit)="sendMessage(sendForm)" #sendForm="ngForm">
+      <div class="chat-send row">
+        <div class="col-10">
+          <input type="text" class="form-control" name="message" id="input-message" ngModel>
+        </div>
+        <div class="col-2">
+          <button type="submit" class="btn btn-outline-success">Send</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

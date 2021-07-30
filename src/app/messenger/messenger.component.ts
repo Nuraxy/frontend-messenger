@@ -9,7 +9,6 @@ import {UserService} from '../user/user.service';
 import {Token} from '../token';
 import {Router} from '@angular/router';
 import {FriendsService} from '../user/friend.service';
-import {flatMap} from 'rxjs/internal/operators';
 
 @Component({
   selector: 'app-messenger',
@@ -56,10 +55,10 @@ export class MessengerComponent implements OnInit, OnDestroy {
       return 1;
     }
 
-  sendMessage(sendForm: NgForm): void {
-    this.webSocketService.sendMessage(this.getChatId(this.chatId), sendForm.value.message);
-    sendForm.controls.message.reset();
-  }
+  // sendMessage(sendForm: NgForm): void {
+  //   this.webSocketService.sendMessage(this.getChatId(this.chatId), sendForm.value.message);
+  //   sendForm.controls.message.reset();
+  // }
 
   ngOnDestroy(): void {
     this.webSocketService.closeWebSocket();

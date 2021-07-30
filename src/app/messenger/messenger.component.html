@@ -35,7 +35,8 @@
       </div>
       <div class="col-10 vh-75">
         <app-chat id="pc"
-                  *ngIf="chatId2 != null"
+                  *ngIf="chatId2 != null && currentToken != null"
+                  [currentUserId]="currentToken.user.userId"
                   [chatId]="chatId2">
         </app-chat>
       </div>
