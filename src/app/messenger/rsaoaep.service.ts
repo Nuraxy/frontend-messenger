@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, forkJoin, from, Observable, throwError} from 'rxjs';
 import {Token} from '../token';
-import {map, mergeMap} from 'rxjs/operators';
+import {map, mergeMap, tap} from 'rxjs/operators';
 import {flatMap} from 'rxjs/internal/operators';
 import {Base64} from 'js-base64';
 import {IndexedDBService} from './indexed-db.service';
@@ -98,7 +98,8 @@ export class RsaoaepService {
     const enc = new TextEncoder();
     const encoded = enc.encode(message);
     if (receiverUserPublicKey !== undefined) {
-      return from(this.importPublicKey(receiverUserPublicKey)).pipe(
+      return from(this.importPublicKey(receiverUserPublicKey)
+      ).pipe(
         flatMap((importedKey) => {
           return from(
             window.crypto.subtle.encrypt(

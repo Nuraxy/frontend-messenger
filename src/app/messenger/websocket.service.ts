@@ -1,12 +1,11 @@
 import {Injectable} from '@angular/core';
-import {ChatMessageOutgoing} from './chatMessageOutgoing';
-import {GreetingChatMessage} from './greetingChatMessage';
 import {BehaviorSubject, forkJoin, Observable} from 'rxjs';
 import {RsaoaepService} from './rsaoaep.service';
 import {UserService} from '../user/user.service';
 import {Token} from '../token';
 import {map, mergeAll, mergeMap} from 'rxjs/operators';
 import {User} from '../user/user';
+import {ChatMessage, IngoingChatMessage, OutgoingChatMassage} from './chat-message';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +13,10 @@ import {User} from '../user/user';
 export class WebSocketService {
 
   webSocket?: WebSocket;
-  chatMessages: ChatMessageOutgoing[] = [];
-  chatMessageDto!: ChatMessageOutgoing;
+  ingoingChatMessagesList = new Map<string, IngoingChatMessage[]>();
+  ingoingChatMessagesListOfUnread = new Map<string, IngoingChatMessage[]>();
+  currentChatId = '';
+  chatMessageIncoming!: IngoingChatMessage;
   token: BehaviorSubject<Token>;
   interval: any;
 
@@ -23,36 +24,71 @@ export class WebSocketService {
     this.token = new BehaviorSubject<Token>(JSON.parse(localStorage.getItem('token') as string));
   }
 
-  public onOpenWebSocket(greetingChatMessage: GreetingChatMessage): void {
+  public onOpenWebSocket(greetingChatMessage: ChatMessage): void {
     this.webSocket = new WebSocket('ws://localhost:8079/chat');
     console.log('This.WebSocket: ', this.webSocket);
 
     this.webSocket.onopen = (event) => {
-      // console.log('Open: ', event);
       this.webSocket?.send(JSON.stringify(greetingChatMessage));
     };
 
     this.webSocket.onmessage = (event) => {
-      const chatMessageDtoEncrypted = JSON.parse(event.data);
-      this.rsaoaepService.decryptMessage(chatMessageDtoEncrypted.message).subscribe((decrypted: string) => {
-        this.chatMessageDto = chatMessageDtoEncrypted;
-        this.chatMessageDto.message = decrypted;
-        this.chatMessages.push(this.chatMessageDto);
+      const chatMessageDtoIncoming = JSON.parse(event.data);
+      this.rsaoaepService.decryptMessage(chatMessageDtoIncoming.message).subscribe((decrypted: string) => {
+        this.chatMessageIncoming = chatMessageDtoIncoming;
+        this.chatMessageIncoming.message = decrypted;
+
+        const chatListOfUnread = this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId);
+        // chatListOfUnread.push(chatMessageDtoIncoming);
+        if (this.currentChatId === chatMessageDtoIncoming.chatId) {
+            if (chatListOfUnread != null) {
+              if (chatListOfUnread.length > 0) {
+                this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+              } else {
+                if (this.ingoingChatMessagesList.has(chatMessageDtoIncoming.chatId)) {
+                  this.ingoingChatMessagesList.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+                } else {
+                  this.ingoingChatMessagesList.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+                }
+              }
+            }else {
+              if (this.ingoingChatMessagesList.has(chatMessageDtoIncoming.chatId)) {
+                this.ingoingChatMessagesList.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+              } else {
+                this.ingoingChatMessagesList.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+              }
+            }
+          } else {
+            if (this.ingoingChatMessagesListOfUnread.has(chatMessageDtoIncoming.chatId)) {
+              this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+            } else {
+              this.ingoingChatMessagesListOfUnread.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+            }
+          }
       });
     };
 
     this.webSocket.onclose = (event) => {
-      // console.log('Close: ', event);
     };
   }
 
-  private createEncryptedMessage(plainText: string, sender: User, receiver: User, chatId: string): Observable<ChatMessageOutgoing> {
+  private createEncryptedMessage(plainText: string, sender: User, receiver: User, chatId: string): Observable<OutgoingChatMassage> {
+    let outgoingChatMassage: OutgoingChatMassage;
     if (receiver.publicKey != null) {
       return this.rsaoaepService.encryptMessage(plainText, receiver.publicKey).pipe(
-        map((cipherText) => new ChatMessageOutgoing(sender, receiver, cipherText, chatId))
+        map((cipherText) => {
+          return outgoingChatMassage = {
+            messageType: 'Message',
+            senderId: sender.userId,
+            message: cipherText,
+            receiverId: receiver.userId,
+            chatId
+          };
+        })
       );
     } else {
-      throw new Error();
+      console.log('PublicKey form message receiver: ' + receiver.publicKey);
+      throw new Error('error missing publicKey');
     }
   }
 
@@ -66,7 +102,8 @@ export class WebSocketService {
               this.createEncryptedMessage(plainText, this.token.value.user, receiver, chatId)]
           ).pipe(
             map((chatMessagesToSend) => {
-              if (chatMessagesToSend[1].sender === chatMessagesToSend[1].receiver) {
+              // todo früher abfragen ?
+              if (chatMessagesToSend[1].senderId === chatMessagesToSend[1].receiverId) {
                 return chatMessagesToSend.slice(0, 1);
               }
               return chatMessagesToSend;
@@ -74,7 +111,7 @@ export class WebSocketService {
           );
         }),
         mergeAll(),
-        map((chatMessageOutgoing: ChatMessageOutgoing) => {
+        map((chatMessageOutgoing: OutgoingChatMassage) => {
           if (this.webSocket !== undefined) {
             this.webSocket.send(JSON.stringify(chatMessageOutgoing));
           }

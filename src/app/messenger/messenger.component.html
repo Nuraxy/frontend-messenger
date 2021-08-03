@@ -28,6 +28,7 @@
           <tr *ngFor="let friend of friends">
             <td class="cursor2Pointer" (click)="getChatId(friend.userId)">
               {{friend.name}}
+              <span class="badge-style top-0 start-150 translate-middle badge rounded-pill">{{webSocketService.ingoingChatMessagesList.size}}</span>
             </td>
           </tr>
           </tbody>
@@ -35,9 +36,9 @@
       </div>
       <div class="col-10 vh-75">
         <app-chat id="pc"
-                  *ngIf="chatId2 != null && currentToken != null"
+                  *ngIf="chatId != null && currentToken != null"
                   [currentUserId]="currentToken.user.userId"
-                  [chatId]="chatId2">
+                  [chatId]="chatId">
         </app-chat>
       </div>
     </div>
