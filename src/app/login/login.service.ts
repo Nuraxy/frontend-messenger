@@ -5,6 +5,7 @@ import {HttpClient} from '@angular/common/http';
 import {filter, map, mergeMap, tap} from 'rxjs/operators';
 import {RsaoaepService} from '../messenger/rsaoaep.service';
 import {IndexedDBService} from '../messenger/indexed-db.service';
+import {environment} from '../../environments/environment';
 
 @Injectable({providedIn: 'root'})
 export class LoginService {
@@ -34,7 +35,8 @@ export class LoginService {
         map(token => token as Token),
         tap((token: Token) => this.currentTokenSubject.next(token)),
         mergeMap((token: Token) => {
-          if (token.user.publicKey == null || token.user.publicKey != null) {
+          // todo || token.user.publicKey != null
+          if (token.user.publicKey == null) {
             return this.rsaoaepService.generateKeys().pipe(
               map((publicKeyString: string) => {
                 token.user.publicKey = publicKeyString;
@@ -46,6 +48,13 @@ export class LoginService {
             return of(token);
           }
         })
+      );
+  }
+
+  logout(): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}users/logout/${this.currentTokenValue.tokenId}`)
+      .pipe(
+        tap(() => localStorage.removeItem('token'))
       );
   }
 

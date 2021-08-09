@@ -2,13 +2,54 @@
   cursor: pointer;
 }
 
-.textRight{
+.scrollable{
+  overflow-y: auto;
+  scroll-behavior: revert;
+  overscroll-behavior-y: revert;
+  height: 70vh;
+}
+
+.textRight {
   text-align: end;
 }
 
-.textBoxRight{
+.textBoxLeft {
+  background-color: lightgray;
+  width: fit-content;
+  padding: 5px 15px;
+  border-radius: 25px;
+}
+
+.textBoxRight {
   background-color: aquamarine;
   width: fit-content;
   padding: 5px 15px;
   border-radius: 25px;
+}
+
+.newMessageTag {
+  align-self: center;
+}
+.newMessageTagDisplay {
+  display: none;
+}
+
+.blueBorder {
+  width: fit-content;
+  background-color: lightblue;
+  padding: 5px 15px;
+  border-radius: 25px;
+  opacity: 0.5;
+}
+
+.newMessage {
+  background-color: lightgray;
+  width: fit-content;
+  padding: 5px 15px;
+  border-radius: 25px;
+}
+
+li.list-group-item {
+  padding: 3px 25px;
+  border-bottom: 0;
 }

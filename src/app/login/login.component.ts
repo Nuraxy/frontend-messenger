@@ -10,6 +10,7 @@ import {LoginService} from './login.service';
 })
 export class LoginComponent implements OnInit {
   form!: FormGroup;
+  pw = 'Geheim15';
 
   constructor(private formBuilder: FormBuilder,
               private router: Router,
@@ -20,7 +21,7 @@ export class LoginComponent implements OnInit {
     this.form = this.formBuilder.group(
       {
         username: ['', Validators.required],
-        password: ['', Validators.required]
+        password: [this.pw, Validators.required]
       }
     );
   }

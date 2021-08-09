@@ -14,6 +14,7 @@ export class WebSocketService {
 
   webSocket?: WebSocket;
   ingoingChatMessagesList = new Map<string, IngoingChatMessage[]>();
+  ingoingOldChatMessagesList = new Map<string, IngoingChatMessage[]>();
   ingoingChatMessagesListOfUnread = new Map<string, IngoingChatMessage[]>();
   currentChatId = '';
   chatMessageIncoming!: IngoingChatMessage;
@@ -37,39 +38,41 @@ export class WebSocketService {
       this.rsaoaepService.decryptMessage(chatMessageDtoIncoming.message).subscribe((decrypted: string) => {
         this.chatMessageIncoming = chatMessageDtoIncoming;
         this.chatMessageIncoming.message = decrypted;
-
+        if (this.chatMessageIncoming.messageType === 'Message') {
         const chatListOfUnread = this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId);
         // chatListOfUnread.push(chatMessageDtoIncoming);
         if (this.currentChatId === chatMessageDtoIncoming.chatId) {
-            if (chatListOfUnread != null) {
-              if (chatListOfUnread.length > 0) {
-                this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
-              } else {
-                if (this.ingoingChatMessagesList.has(chatMessageDtoIncoming.chatId)) {
-                  this.ingoingChatMessagesList.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
-                } else {
-                  this.ingoingChatMessagesList.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
-                }
-              }
-            }else {
-              if (this.ingoingChatMessagesList.has(chatMessageDtoIncoming.chatId)) {
-                this.ingoingChatMessagesList.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
-              } else {
-                this.ingoingChatMessagesList.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
-              }
-            }
-          } else {
-            if (this.ingoingChatMessagesListOfUnread.has(chatMessageDtoIncoming.chatId)) {
+          if (chatListOfUnread != null) {
+            if (chatListOfUnread.length > 0) {
               this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
             } else {
-              this.ingoingChatMessagesListOfUnread.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+              this.saveInCurrentList(chatMessageDtoIncoming);
             }
+          } else {
+            this.saveInCurrentList(chatMessageDtoIncoming);
           }
+        } else {
+          if (this.ingoingChatMessagesListOfUnread.has(chatMessageDtoIncoming.chatId)) {
+            this.ingoingChatMessagesListOfUnread.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+          } else {
+            this.ingoingChatMessagesListOfUnread.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+          }
+        }
+        } else if (this.chatMessageIncoming.messageType === 'OldMessage') {
+          console.log('läuft');
+        }
       });
     };
-
     this.webSocket.onclose = (event) => {
     };
+  }
+
+  private saveInCurrentList(chatMessageDtoIncoming: any): void {
+    if (this.ingoingChatMessagesList.has(chatMessageDtoIncoming.chatId)) {
+      this.ingoingChatMessagesList.get(chatMessageDtoIncoming.chatId)?.push(chatMessageDtoIncoming);
+    } else {
+      this.ingoingChatMessagesList.set(chatMessageDtoIncoming.chatId, [chatMessageDtoIncoming]);
+    }
   }
 
   private createEncryptedMessage(plainText: string, sender: User, receiver: User, chatId: string): Observable<OutgoingChatMassage> {
@@ -118,6 +121,10 @@ export class WebSocketService {
         })
       ).subscribe();
     }
+  }
+
+  public withSpecialMessageType(withSpecialMessageType: ChatMessage): void {
+    this.webSocket?.send(JSON.stringify(withSpecialMessageType));
   }
 
   public createChatId(receiver: User): string {

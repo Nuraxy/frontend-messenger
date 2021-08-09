@@ -8,6 +8,7 @@ import {UserService} from '../user/user.service';
 import {Token} from '../token';
 import {FriendsService} from '../user/friend.service';
 import {ChatMessage, IngoingChatMessage} from './chat-message';
+import {LoginService} from '../login/login.service';
 
 @Component({
   selector: 'app-messenger',
@@ -34,7 +35,8 @@ export class MessengerComponent implements OnInit, OnDestroy {
 
   constructor(public webSocketService: WebSocketService,
               private userService: UserService,
-              private friendService: FriendsService) {
+              private friendService: FriendsService,
+              public loginService: LoginService) {
   }
 
   ngOnInit(): void {
@@ -44,11 +46,17 @@ export class MessengerComponent implements OnInit, OnDestroy {
       senderId: this.currentToken.user.userId,
       message: 'Missing PublicKey'
     };
+
     if (this.currentToken.user.publicKey != null) {
       greetingChatMessage.message = this.currentToken.user.publicKey;
     }
     this.webSocketService.onOpenWebSocket(greetingChatMessage);
     this.friendService.getUserFriends(this.currentToken.user.userId).subscribe((friends) => this.friends = friends);
+  }
+
+  getUnreadMessages( friend: User): number | undefined {
+    const chatId = this.webSocketService.createChatId(friend);
+    return this.webSocketService.ingoingChatMessagesListOfUnread.get(chatId)?.length;
   }
 
   getChatId(friendId: number): void {
@@ -96,4 +104,5 @@ export class MessengerComponent implements OnInit, OnDestroy {
       this.hasLoadAllUsers = page.last;
     });
   }
+
 }

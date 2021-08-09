@@ -2,31 +2,42 @@
   <div class="card-header w-100">
     {{chatId}}
   </div>
-  <div class="card-body w-100">
+  <div class="card-body w-100 scrollable">
     <ul class="list-group list-group-flush">
+<!--        OLD MESSAGES         -->
+<!--      <li class="list-group-item"-->
+<!--          [ngClass]="{'textRight': chatMessage.receiverId == chatMessage.senderId}"-->
+<!--          *ngFor="let chatMessage of webSocketService.ingoingOldChatMessagesList.get(chatId)">-->
+
+<!--        <div [ngClass]="{'textBoxRight float-right': chatMessage.receiverId == chatMessage.senderId,-->
+<!--          textBoxLeft : chatMessage.receiverId != chatMessage.senderId}">-->
+
+<!--          <strong>{{chatMessage.senderId}}: </strong>-->
+<!--          <span>{{chatMessage.message}}</span>-->
+<!--        </div>-->
+<!--      </li>-->
+<!--        CURRENT MESSAGES         -->
       <li class="list-group-item"
           [ngClass]="{'textRight': chatMessage.receiverId == chatMessage.senderId}"
           *ngFor="let chatMessage of webSocketService.ingoingChatMessagesList.get(chatId)">
 
-          <div [ngClass]="{'textBoxRight float-right': chatMessage.receiverId == chatMessage.senderId}">
-            <strong>{{chatMessage.senderId}}: </strong>
-            <span>{{chatMessage.message}}</span>
-        </div>
+        <div [ngClass]="{'textBoxRight float-right': chatMessage.receiverId == chatMessage.senderId,
+          textBoxLeft : chatMessage.receiverId != chatMessage.senderId}">
 
-      </li>
-<!--     <ng-template *ngIf="webSocketService.ingoingChatMessagesListOfUnread.get(chatId) != null">-->
-       <li class="list-group-item">----NEW MESSAGES----</li>
-      <li class="list-group-item"
-          [ngClass]="{'textRight': chatMessage.receiverId == chatMessage.senderId}"
-          *ngFor="let chatMessage of webSocketService.ingoingChatMessagesListOfUnread.get(chatId)">
-
-        <div [ngClass]="{'textBoxRight float-right': chatMessage.receiverId == chatMessage.senderId}">
           <strong>{{chatMessage.senderId}}: </strong>
           <span>{{chatMessage.message}}</span>
         </div>
-
       </li>
-<!--       </ng-template>-->
+<!--        UNREAD MESSAGES         -->
+      <li class="list-group-item newMessageTag" [ngClass]="{newMessageTagDisplay: !webSocketService.ingoingChatMessagesListOfUnread.has(chatId)}"><div class="blueBorder">----NEW MESSAGES----</div></li>
+      <li class="list-group-item"
+          [ngClass]="{'textRight': chatMessage.receiverId == chatMessage.senderId}"
+          *ngFor="let chatMessage of webSocketService.ingoingChatMessagesListOfUnread.get(chatId)">
+        <div class="newMessage">
+          <strong>{{chatMessage.senderId}}: </strong>
+          <span>{{chatMessage.message}}</span>
+        </div>
+      </li>
     </ul>
   </div>
   <div class="card-footer">
